@@ -30,7 +30,7 @@ public class ClienteService {
         cliente.setSoporteTickets(datos.soporteTickets());
         cliente.setCambioPlan(datos.cambioPlan());
         cliente.setPagoAutomatico(datos.pagoAutomatico());
-        cliente.setEdad(datos.edad());
+
 
         return repository.save(cliente);
     }

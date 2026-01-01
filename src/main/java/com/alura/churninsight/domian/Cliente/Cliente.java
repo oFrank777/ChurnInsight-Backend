@@ -41,8 +41,7 @@ public class Cliente {
     @Column(nullable = false)
     private String pagoAutomatico;
 
-    @Column(nullable = false)
-    private Integer edad;
+
 
     public Cliente() {}
 }

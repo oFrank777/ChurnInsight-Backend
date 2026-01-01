@@ -25,10 +25,9 @@ public record ClienteDatos(
         String cambioPlan,
 
         @NotBlank
-        String pagoAutomatico,
+        String pagoAutomatico
 
-        @NotNull @Min(18) @Max(100)
-        Integer edad
+
 
         ) {
 }
