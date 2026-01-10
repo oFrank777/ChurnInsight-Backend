@@ -1,4 +1,4 @@
-package com.alura.churninsight.domian.Usuario;
+package com.alura.churninsight.domain.Usuario;
 import jakarta.persistence.*;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;

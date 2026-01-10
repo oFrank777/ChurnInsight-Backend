@@ -1,6 +1,6 @@
 package com.alura.churninsight.Repository;
 
-import com.alura.churninsight.domian.Usuario.Usuario;
+import com.alura.churninsight.domain.Usuario.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

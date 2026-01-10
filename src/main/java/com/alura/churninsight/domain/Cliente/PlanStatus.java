@@ -1,4 +1,4 @@
-package com.alura.churninsight.domian.Cliente;
+package com.alura.churninsight.domain.Cliente;
 
 public enum PlanStatus {
     BASICO,

@@ -1,6 +1,6 @@
 package com.alura.churninsight.Security;
 
-import com.alura.churninsight.domian.Usuario.Usuario;
+import com.alura.churninsight.domain.Usuario.Usuario;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import org.springframework.stereotype.Service;

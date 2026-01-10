@@ -1,4 +1,4 @@
-package com.alura.churninsight.domian.Usuario;
+package com.alura.churninsight.domain.Usuario;
 
 import jakarta.validation.constraints.NotBlank;
 

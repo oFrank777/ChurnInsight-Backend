@@ -19,42 +19,46 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    @Autowired
-    private final SecurityFilter securityFilter;
-    @Autowired
-    private final AutenticacionService autenticacionService;
+        @Autowired
+        private final SecurityFilter securityFilter;
+        @Autowired
+        private final AutenticacionService autenticacionService;
 
-    @Bean
-    AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .userDetailsService(autenticacionService)
-                .passwordEncoder(passwordEncoder())
-                .and()
-                .build();
-    }
+        @Bean
+        AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+                return http.getSharedObject(AuthenticationManagerBuilder.class)
+                                .userDetailsService(autenticacionService)
+                                .passwordEncoder(passwordEncoder())
+                                .and()
+                                .build();
+        }
 
-    @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm ->
-                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/login",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(securityFilter,
-                        UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
+        @Bean
+        SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+                return http
+                                .csrf(csrf -> csrf.disable())
+                                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(
+                                                                "/login/**",
+                                                                "/v3/api-docs/**",
+                                                                "/swagger-ui/**",
+                                                                "/swagger-ui.html",
+                                                                "/favicon.ico",
+                                                                "/",
+                                                                "/index.html",
+                                                                "/static/**",
+                                                                "/predict/**",
+                                                                "/actuator/**")
+                                                .permitAll()
+                                                .anyRequest().authenticated())
+                                .addFilterBefore(securityFilter,
+                                                UsernamePasswordAuthenticationFilter.class)
+                                .build();
+        }
 
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 }

@@ -1,9 +1,9 @@
 package com.alura.churninsight.Controller;
 
 import com.alura.churninsight.Security.TokenService;
-import com.alura.churninsight.domian.Usuario.DatosAutenticacion;
-import com.alura.churninsight.domian.Usuario.DatosTokenJWT;
-import com.alura.churninsight.domian.Usuario.Usuario;
+import com.alura.churninsight.domain.Usuario.DatosAutenticacion;
+import com.alura.churninsight.domain.Usuario.DatosTokenJWT;
+import com.alura.churninsight.domain.Usuario.Usuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,15 +26,14 @@ public class AutenticacionController {
     public ResponseEntity<DatosTokenJWT> login(
             @RequestBody @Valid DatosAutenticacion datos) {
 
-        var authToken =
-                new UsernamePasswordAuthenticationToken(
-                        datos.correoElectronico(),
-                        datos.contrasena());
+        var authToken = new UsernamePasswordAuthenticationToken(
+                datos.correoElectronico(),
+                datos.contrasena());
 
         var auth = authenticationManager.authenticate(authToken);
         var token = tokenService.generarToken((Usuario) auth.getPrincipal());
 
         return ResponseEntity.ok(new DatosTokenJWT(token));
     }
-}
 
+}

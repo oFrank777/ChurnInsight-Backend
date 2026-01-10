@@ -1,4 +1,4 @@
-package com.alura.churninsight.domian.Cliente;
+package com.alura.churninsight.domain.Cliente;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -6,7 +6,6 @@ import lombok.Data;
 @Entity
 @Table(name = "clientes")
 @Data
-
 public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,12 +35,14 @@ public class Cliente {
     private Integer soporteTickets;
 
     @Column(nullable = false)
-    private String cambioPlan;
+    private Boolean cambioPlan;
 
     @Column(nullable = false)
-    private String pagoAutomatico;
+    private Boolean pagoAutomatico;
 
+    @Column(nullable = false)
+    private Boolean churn;
 
-
-    public Cliente() {}
+    public Cliente() {
+    }
 }
