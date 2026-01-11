@@ -1,98 +1,69 @@
-# ChurnInsight - Predicción de Deserción de Clientes
+# 🛡️ ChurnInsight: Enterprise Backend Orchestrator
 
-Este proyecto es una herramienta para predecir la probabilidad de que un cliente cancele un servicio (churn). Está diseñado especialmente para empresas de telecomunicaciones, fintechs y servicios de suscripción.
+![Java](https://img.shields.io/badge/Java-17-orange?style=for-the-badge&logo=java)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.1-green?style=for-the-badge&logo=springboot)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=for-the-badge&logo=mysql)
+![Hibernate](https://img.shields.io/badge/Hibernate-ORM-59666C?style=for-the-badge&logo=hibernate)
 
-## 🚀 Funcionalidades Principales (MVP)
+## 📖 Descripción del Proyecto
+ChurnInsight es una solución integral para la retención de clientes. Este backend actúa como el **Núcleo de Orquestación** de un sistema distribuido, integrando bases de datos relacionales con microservicios de Inteligencia Artificial externos. Su arquitectura está diseñada para ser **resiliente, desacoplada y escalable**.
 
-- **Predicción Individual (JSON)**: Endpoint que recibe datos de un cliente y devuelve el riesgo de churn.
-- **Predicción en Lote (CSV)**: Carga masiva de clientes para análisis rápido.
-- **Dashboard Interactivo**: Interfaz web para visualizar resultados y estadísticas.
-- **Explicabilidad**: Identifica los 3 factores de riesgo más importantes para cada cliente.
-- **Persistencia**: Registro de todas las evaluaciones en base de datos MySQL.
-- **Contenerización**: Listo para ejecutar con Docker.
+---
 
-## 🛠️ Requisitos Técnicos
+## 🧠 Arquitectura de Microservicios Híbrida
+A diferencia de aplicaciones monolíticas, ChurnInsight utiliza un ecosistema distribuido:
 
-- Java 17+
-- Maven 3.6+
-- MySQL 8.0+
-- Docker & Docker Compose (Opcional)
+1.  **Core Services (Java/Spring Boot):** Gestiona la lógica de negocio, persistencia de datos y seguridad.
+2.  **AI Microservice (Python/Google Colab):** Ejecuta un modelo **RandomForestClassifier** que procesa variables comportamentales para predecir la probabilidad de abandono (*Churn Rate*).
+3.  **Cross-Network Bridge:** Implementación de túneles dinámicos (Localtunnel) con inyección de headers (`bypass-tunnel-reminder`) para permitir comunicación servidor-a-servidor entre entornos locales y nubes públicas.
 
-## 💻 Cómo Ejecutar el Proyecto
+---
 
-### Opción 1: Con Docker Compose (Recomendado)
+## ✨ Características Principales
+*   **Integración de IA Externa:** Comunicación vía REST con modelos de Machine Learning alojados de forma remota.
+*   **Sistema de Backup (Fallback):** Si la IA externa no está disponible (ej. caída de conexión), el Backend utiliza una lógica de respaldo local basada en un motor de reglas experto.
+*   **Normalización Aggressive:** Capa de infraestructura que garantiza la integridad de los datos heredados, transformando estados inconsistentes en tipos de datos Booleanos puros.
+*   **Explicabilidad Humana:** El sistema no solo entrega un número; genera reportes descriptivos sobre los factores de riesgo detectados.
 
-```bash
-docker-compose up --build
-```
+---
 
-### Opción 2: Desarrollo Local (Maven)
+## 🛠️ Stack Tecnológico & Decisiones Técnicas
+*   **Java 17 (LTS):** Aprovechando *Records* y *Stream API* para un código más limpio y eficiente.
+*   **Spring Data JPA:** Abstracción de acceso a datos para una gestión de persistencia robusta.
+*   **Flyway:** Control de versiones de base de datos, asegurando que el esquema de MySQL sea consistente en todos los entornos.
+*   **REST Client (RestTemplate):** Optimizado con interceptores para saltar validaciones de seguridad de túneles en tiempo real.
 
-1. Configura tu base de datos en `src/main/resources/application.properties`.
-2. Ejecuta el comando:
-```bash
-./mvnw spring-boot:run
-```
-3. Accede al Dashboard en: `http://localhost:8080/index.html`
+---
 
-### 🛠️ Herramientas de Inspección (Jurados)
-- **Documentación API (Swagger)**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-- **Estado del Sistema (Health)**: [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
+## 📡 Especificación de la API (RESTful)
 
-## 📡 Ejemplo de Uso de la API (REST)
+### Gestión de Predicciones
+*   `GET /api/predict/stats`: Retorna métricas globales (Total de clientes, Tasa de Churn agregada).
+*   `POST /api/predict/{id}`: Ejecuta el flujo completo de IA:
+    1.  Recupera datos del historial de cliente.
+    2.  Llama al microservicio de Python por HTTP.
+    3.  Aplica reglas de negocio para explicabilidad.
+    4.  Persiste el resultado en el historial.
 
-### Endpoint POST `/predict`
+### Seguridad e Infraestructura
+*   **Filtro CORS:** Configurado para aceptar peticiones desde dominios de GitHub Pages.
+*   **Actuator:** Endpoints `/health` y `/metrics` habilitados para monitoreo proactivo.
 
-**Petición (JSON):**
-```json
-{
-  "cliente_id": 1001,
-  "tiempo_contrato_meses": 12,
-  "retrasos_pago": 2,
-  "uso_mensual": 14.5,
-  "plan": "PREMIUM",
-  "soporte_tickets": 4
-}
-```
+---
 
-**Respuesta:**
-```json
-{
-  "prevision": "Va a cancelar",
-  "probabilidad": 0.85,
-  "factoresRiesgo": [
-    "Más de 2 meses de retraso en pagos",
-    "Alto número de tickets de soporte",
-    "Suscrito al plan Básico"
-  ]
-}
-```
+## � Instalación y Configuración
+1.  **Variables de Entorno:** Configurar `src/main/resources/application.properties`.
+    ```properties
+    spring.datasource.url=jdbc:mysql://localhost:3306/churninsight
+    api.ds.url=https://tu-modelo-ia.loca.lt/predict_api
+    ```
+2.  **Compilación y Ejecución:**
+    ```bash
+    ./mvnw clean spring-boot:run
+    ```
 
-### Endpoint GET `/predict/stats`
+---
 
-**Respuesta:**
-```json
-{
-  "total_evaluados": 150,
-  "tasa_churn": 0.18
-}
-```
-
-## ☁️ Despliegue en OCI (Oracle Cloud Infrastructure)
-
-Para asegurar un funcionamiento óptimo en el **Free Tier de OCI** (recursos limitados), se recomiendan los siguientes parámetros en la ejecución de la JVM:
-
-```bash
-java -Xmx512M -Xms256M -jar target/churninsight-0.0.1-SNAPSHOT.jar
-```
-*Esto limita el uso de memoria para no exceder los límites de la instancia gratuita.*
-
-## 📂 Estructura del Proyecto
-
-- `src/main/java`: Código fuente de la API (Spring Boot).
-- `src/main/resources/static`: Frontend (HTML/JS).
-- `src/main/resources/db/migration`: Migraciones de base de datos (Flyway).
-
-## 👥 Equipo
-- **Data Science**: Limpieza, EDA y creación del modelo de clasificación.
-- **Back-end**: Construcción de API REST, integración de modelo y Dashboard.
+## 👨‍� Equipo de Backend
+- **Repositorio Original:** [pedro8734/churninsight-backend](https://github.com/pedro8734/churninsight-backend)
+- **Branch de Integración y IA:** `Rama-Ower`
