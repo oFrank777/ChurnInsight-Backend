@@ -18,8 +18,8 @@ ALTER TABLE clientes
     MODIFY genero VARCHAR(20) NOT NULL;
 
 -- 3. Gestión de la columna 'churn'
--- La creamos si no existe y la sincronizamos con el historial
-ALTER TABLE clientes ADD COLUMN IF NOT EXISTS churn BOOLEAN DEFAULT 0;
+-- La creamos y la sincronizamos con el historial
+ALTER TABLE clientes ADD COLUMN churn BOOLEAN DEFAULT 0;
 
 -- Sincronizar 'churn' con historial de predicciones (Probabilidad >= 0.6 -> Churn = 1)
 UPDATE clientes SET churn = 1 WHERE id IN (SELECT cliente_id FROM predicciones WHERE probabilidad >= 0.6);

@@ -30,6 +30,8 @@ public class Prediccion {
 
     private double probabilidad;
     private String resultado;
+    private boolean esChurn;
+    private String accionRecomendada;
     private LocalDateTime fecha;
 
     @ElementCollection

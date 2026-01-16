@@ -38,6 +38,7 @@ public class PrediccionService {
                 this.clienteService = clienteService;
         }
 
+        @Transactional
         public ResultadoPrediccion predecirIndividual(DatosSolicitudPrediccion datos) {
                 if (clienteRepository.existsByClienteId(datos.idCliente())) {
                         throw new ValidacionDeNegocioException("Ya existe un cliente con el ID " + datos.idCliente()
@@ -69,24 +70,37 @@ public class PrediccionService {
                                 .calcularProbabilidadCancelacion(cliente);
 
                 double probabilidad = resultadoModelo.probabilidad();
-                boolean isChurn = probabilidad >= 0.6;
-                String prevision = isChurn ? "Va a cancelar" : "No va a cancelar";
+                // CONFIAMOS 100% EN LA IA: Usamos la clase predicha por el modelo ONNX (1 =
+                // Churn, 0 = Retención)
+                boolean isChurnIA = resultadoModelo.claseIA() == 1;
+                String prevision = isChurnIA ? "Va a cancelar" : "No va a cancelar";
 
-                cliente.setChurn(isChurn);
+                cliente.setChurn(isChurnIA);
                 clienteRepository.save(cliente);
+
+                // Limpieza absoluta: Cada cliente DEBE tener solo una predicción.
+                prediccionRepository.eliminarPorCliente(cliente);
+                prediccionRepository.flush();
 
                 Prediccion prediccion = new Prediccion();
                 prediccion.setCliente(cliente);
                 prediccion.setProbabilidad(probabilidad);
+                prediccion.setEsChurn(isChurnIA);
                 prediccion.setResultado(prevision);
+                prediccion.setAccionRecomendada(resultadoModelo.accionRecomendada());
                 prediccion.setFecha(LocalDateTime.now());
-                prediccion.setFactores(resultadoModelo.factores());
+
+                if (resultadoModelo.factores() != null) {
+                        prediccion.setFactores(new java.util.ArrayList<>(resultadoModelo.factores()));
+                }
+
                 prediccionRepository.save(prediccion);
 
                 return new ResultadoPrediccion(
-                                isChurn, // boolean churn
+                                isChurnIA,
                                 prevision,
                                 probabilidad,
+                                resultadoModelo.accionRecomendada(),
                                 resultadoModelo.factores(),
                                 cliente.getClienteId(),
                                 cliente.getGenero(),
@@ -107,16 +121,16 @@ public class PrediccionService {
                 return new DatosEstadisticas(total, tasaCancelacion);
         }
 
+        @Transactional
         public List<ResultadoPrediccion> predecirEnLote(MultipartFile archivo) {
                 try {
                         String contenido = new String(archivo.getBytes());
                         String[] lineas = contenido.split("\n");
                         log.info("Iniciando procesamiento por lote de {} líneas...", lineas.length - 1);
 
-                        // Procesamiento en paralelo para agilizar las llamadas a la API de Python
+                        // Procesamiento secuencial para garantizar estabilidad transaccional
                         return java.util.Arrays.stream(lineas)
                                         .skip(1) // Saltar cabecera
-                                        .parallel() // Procesamiento concurrente
                                         .map(linea -> {
                                                 String fila = linea.trim();
                                                 if (fila.isEmpty())
@@ -131,13 +145,18 @@ public class PrediccionService {
                                                         // - No existe: Crea un cliente nuevo
                                                         Cliente cliente = clienteService.registrarOActualizar(
                                                                         idCliente,
-                                                                        Integer.parseInt(celdas[1].trim()),
-                                                                        Integer.parseInt(celdas[2].trim()),
-                                                                        Double.parseDouble(celdas[3].trim()),
+                                                                        Integer.parseInt(celdas[1].trim()), // meses
+                                                                        Integer.parseInt(celdas[2].trim()), // retrasos
+                                                                        Double.parseDouble(celdas[3].trim()), // uso
                                                                         PlanStatus.valueOf(
-                                                                                        celdas[4].trim().toUpperCase()),
-                                                                        Integer.parseInt(celdas[5].trim()),
-                                                                        null, null, null, null // Defaults
+                                                                                        celdas[4].trim().toUpperCase()), // plan
+                                                                        Integer.parseInt(celdas[5].trim()), // tickets
+                                                                        com.alura.churninsight.domain.Cliente.GeneroStatus
+                                                                                        .valueOf(celdas[8].trim()
+                                                                                                        .toUpperCase()), // genero
+                                                                        celdas[6].trim().equals("1"), // cambio_plan
+                                                                        celdas[7].trim().equals("1"), // pago_automatico
+                                                                        null // churn
                                                         );
 
                                                         // Siempre genera una nueva predicción histórica para este
@@ -165,6 +184,7 @@ public class PrediccionService {
                                                 p.getProbabilidad(),
                                                 p.getResultado(),
                                                 p.getCliente().getChurn() != null ? p.getCliente().getChurn() : false,
+                                                p.getAccionRecomendada(),
                                                 p.getFecha(),
                                                 p.getFactores(),
                                                 p.getCliente().getPlan() != null ? p.getCliente().getPlan().toString()

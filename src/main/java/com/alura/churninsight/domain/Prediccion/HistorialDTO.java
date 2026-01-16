@@ -4,12 +4,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record HistorialDTO(
-                Long id,
-                Integer idCliente,
-                double probabilidad,
-                String resultado,
-                boolean churn, // Nuevo campo
-                LocalDateTime fecha,
-                List<String> factores,
-                String plan) {
+        Long id,
+        Integer idCliente,
+        double probabilidad,
+        String resultado,
+        boolean churn, // Nuevo campo
+        String accionRecomendada,
+        LocalDateTime fecha,
+        List<String> factores,
+        String plan) {
 }
